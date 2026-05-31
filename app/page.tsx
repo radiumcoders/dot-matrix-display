@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { DotMatrixDisplay, WaveDisplay } from "@/components/dot-matrix"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Toggle } from "@/components/ui/toggle"
 
 type Mode = "static" | "wave"
@@ -29,13 +30,18 @@ export default function Page() {
         {mode === "wave" && <WaveDisplay text={committed} color={color} />}
 
         <div className="flex flex-col items-center gap-3 sm:gap-4">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value.slice(0, 12))}
-            onKeyDown={(e) => e.key === "Enter" && setCommitted(text)}
-            placeholder="Type something..."
-            className="w-44 sm:w-56 font-mono text-sm"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, 12))}
+              onKeyDown={(e) => e.key === "Enter" && setCommitted(text)}
+              placeholder="Type something..."
+              className="w-36 sm:w-48 font-mono text-sm"
+            />
+            <Button variant="outline" size="sm" onClick={() => setCommitted(text)}>
+              Render
+            </Button>
+          </div>
 
           <div className="flex items-center gap-2">
             {COLORS.map((c) => (
