@@ -30,15 +30,15 @@ export default function Page() {
         {mode === "wave" && <WaveDisplay text={committed} color={color} />}
 
         <div className="flex flex-col items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex rounded-none border border-input overflow-hidden">
             <Input
               value={text}
               onChange={(e) => setText(e.target.value.slice(0, 12))}
               onKeyDown={(e) => e.key === "Enter" && setCommitted(text)}
               placeholder="Type something..."
-              className="w-36 sm:w-48 font-mono text-sm"
+              className="w-36 sm:w-48 rounded-none border-0 font-mono text-sm"
             />
-            <Button variant="outline" size="sm" onClick={() => setCommitted(text)}>
+            <Button variant="default" size="default" className="rounded-none" onClick={() => setCommitted(text)}>
               Render
             </Button>
           </div>
