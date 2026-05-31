@@ -3,23 +3,44 @@ import { motion, AnimatePresence } from "motion/react"
 import { FONT, GlyphMatrix } from "@/lib/fonts"
 
 // ─── config ────────────────────────────────────────────────────
-const DOT_SIZE = 7 // px — diameter of each dot
-const DOT_GAP = 2 // px — gap between dots
-const CHAR_GAP = 6 // px — gap between characters
+const BASE_DOT_SIZE = 7
+const BASE_DOT_GAP = 2
+const BASE_CHAR_GAP = 6
+
+function useResponsiveScale() {
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    function update() {
+      const w = window.innerWidth
+      if (w < 380) setScale(0.4)
+      else if (w < 480) setScale(0.5)
+      else if (w < 640) setScale(0.65)
+      else if (w < 768) setScale(0.8)
+      else setScale(1)
+    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
+
+  return scale
+}
 
 // ─── types ─────────────────────────────────────────────────────
-type DisplayMode = "static" | "scroll" | "wave"
-
 interface DotProps {
   on: boolean
   color: string
   delay?: number
+  size: number
 }
 
 interface CharGridProps {
   char: string
   color: string
   charIndex?: number
+  dotSize: number
+  dotGap: number
 }
 
 interface DotMatrixDisplayProps {
@@ -33,24 +54,19 @@ interface ScrollingDisplayProps extends DotMatrixDisplayProps {
   speed?: number
 }
 
-interface ColorOption {
-  label: string
-  value: string
-}
-
 // ─── helpers ───────────────────────────────────────────────────
 function getPattern(ch: string): GlyphMatrix {
   return FONT[ch.toUpperCase()] ?? FONT[" "]
 }
 
 // ─── Dot ───────────────────────────────────────────────────────
-function Dot({ on, color, delay = 0 }: DotProps) {
+function Dot({ on, color, delay = 0, size }: DotProps) {
   return (
     <motion.div
-      style={{ width: DOT_SIZE, height: DOT_SIZE }}
+      style={{ width: size, height: size }}
       animate={{
         backgroundColor: on ? color : "var(--muted)",
-        boxShadow: on ? `0 0 ${DOT_SIZE}px ${color}99` : "none",
+        boxShadow: on ? `0 0 ${size}px ${color}99` : "none",
         scale: on ? 1 : 0.85,
       }}
       transition={{ duration: 0.08, delay }}
@@ -59,7 +75,7 @@ function Dot({ on, color, delay = 0 }: DotProps) {
 }
 
 // ─── CharGrid ──────────────────────────────────────────────────
-function CharGrid({ char, color, charIndex = 0 }: CharGridProps) {
+function CharGrid({ char, color, charIndex = 0, dotSize, dotGap }: CharGridProps) {
   const pattern = getPattern(char)
 
   return (
@@ -67,15 +83,16 @@ function CharGrid({ char, color, charIndex = 0 }: CharGridProps) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: charIndex * 0.05 }}
-      style={{ display: "flex", flexDirection: "column", gap: DOT_GAP }}
+      style={{ display: "flex", flexDirection: "column", gap: dotGap }}
     >
       {pattern.map((row, r) => (
-        <div key={r} style={{ display: "flex", gap: DOT_GAP }}>
+        <div key={r} style={{ display: "flex", gap: dotGap }}>
           {row.map((bit, c) => (
             <Dot
               key={c}
               on={bit === 1}
               color={color}
+              size={dotSize}
               delay={charIndex * 0.04 + r * 0.01}
             />
           ))}
@@ -92,14 +109,15 @@ export function DotMatrixDisplay({
   className = "",
 }: DotMatrixDisplayProps) {
   const chars = text.toUpperCase().split("")
+  const scale = useResponsiveScale()
 
   return (
     <div
       className={className}
       style={{
         display: "inline-flex",
-        gap: CHAR_GAP,
-        padding: "20px 24px",
+        gap: BASE_CHAR_GAP * scale,
+        padding: `${20 * scale}px ${24 * scale}px`,
         background: "var(--background)",
         border: "1px solid var(--border)",
       }}
@@ -111,6 +129,8 @@ export function DotMatrixDisplay({
             char={char}
             color={color}
             charIndex={i}
+            dotSize={BASE_DOT_SIZE * scale}
+            dotGap={BASE_DOT_GAP * scale}
           />
         ))}
       </AnimatePresence>
@@ -128,6 +148,7 @@ export function ScrollingDisplay({
 }: ScrollingDisplayProps) {
   const padded = "     " + text.toUpperCase() + "     "
   const [offset, setOffset] = useState(0)
+  const scale = useResponsiveScale()
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -145,15 +166,22 @@ export function ScrollingDisplay({
       className={className}
       style={{
         display: "inline-flex",
-        gap: CHAR_GAP,
-        padding: "20px 24px",
+        gap: BASE_CHAR_GAP * scale,
+        padding: `${20 * scale}px ${24 * scale}px`,
         background: "var(--background)",
         border: "1px solid var(--border)",
         overflow: "hidden",
       }}
     >
       {visible.split("").map((char, i) => (
-        <CharGrid key={i} char={char} color={color} charIndex={0} />
+        <CharGrid
+          key={i}
+          char={char}
+          color={color}
+          charIndex={0}
+          dotSize={BASE_DOT_SIZE * scale}
+          dotGap={BASE_DOT_GAP * scale}
+        />
       ))}
     </div>
   )
@@ -167,6 +195,9 @@ export function WaveDisplay({
 }: DotMatrixDisplayProps) {
   const [tick, setTick] = useState(0)
   const chars = text.toUpperCase().split("")
+  const scale = useResponsiveScale()
+  const dotSize = BASE_DOT_SIZE * scale
+  const dotGap = BASE_DOT_GAP * scale
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 80)
@@ -178,8 +209,8 @@ export function WaveDisplay({
       className={className}
       style={{
         display: "inline-flex",
-        gap: CHAR_GAP,
-        padding: "20px 24px",
+        gap: BASE_CHAR_GAP * scale,
+        padding: `${20 * scale}px ${24 * scale}px`,
         background: "var(--background)",
         border: "1px solid var(--border)",
       }}
@@ -192,18 +223,18 @@ export function WaveDisplay({
             key={ci}
             animate={{ opacity: alpha }}
             transition={{ duration: 0.08 }}
-            style={{ display: "flex", flexDirection: "column", gap: DOT_GAP }}
+            style={{ display: "flex", flexDirection: "column", gap: dotGap }}
           >
             {getPattern(char).map((row, r) => (
-              <div key={r} style={{ display: "flex", gap: DOT_GAP }}>
+              <div key={r} style={{ display: "flex", gap: dotGap }}>
                 {row.map((bit, c) => (
                   <div
                     key={c}
                     style={{
-                      width: DOT_SIZE,
-                      height: DOT_SIZE,
+                      width: dotSize,
+                      height: dotSize,
                       backgroundColor: bit ? color : "var(--muted)",
-                      boxShadow: bit ? `0 0 ${DOT_SIZE}px ${color}66` : "none",
+                      boxShadow: bit ? `0 0 ${dotSize}px ${color}66` : "none",
                     }}
                   />
                 ))}

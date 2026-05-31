@@ -24,17 +24,17 @@ export default function Page() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 p-8">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 sm:gap-8 sm:p-8">
         {mode === "static" && <DotMatrixDisplay text={committed} color={color} />}
         {mode === "wave" && <WaveDisplay text={committed} color={color} />}
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3 sm:gap-4">
           <Input
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, 12))}
             onKeyDown={(e) => e.key === "Enter" && setCommitted(text)}
             placeholder="Type something..."
-            className="w-56 font-mono"
+            className="w-44 sm:w-56 font-mono text-sm"
           />
 
           <div className="flex items-center gap-2">
